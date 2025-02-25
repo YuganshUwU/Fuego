@@ -1,0 +1,5 @@
+may z = 60;
+may x = 75;
+may y = 7;
+may w = z;
+exit(w);

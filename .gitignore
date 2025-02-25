@@ -1,0 +1,10 @@
+#Ignore build directories
+cmake-build-debug-wsl/
+cmake-build-relwithdebinfo-wsl/
+
+#ignore IDE specific files
+.idea/
+
+# Ignore temporary and backup files
+*.log
+
