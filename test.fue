@@ -1,5 +1,5 @@
 may z = 60;
-may x = 75;
+may x = 75 + 10 + 100;
 may y = 7;
-may w = z;
+may w = x;
 exit(w);
