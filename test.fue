@@ -1,5 +1,4 @@
-may z = 60;
-may x = 75 + 10 + 100;
-may y = 7;
-may w = x;
-exit(w);
+may z = 6;
+may x = 10 + (10 + 2 * 3) / 3 - 5;
+may w = x * z;
+exit(x);

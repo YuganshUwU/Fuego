@@ -1,6 +1,19 @@
 #pragma once
 
-enum class TokenType {exit, int_lit, semi, open_paren, close_paren, ident, may, equal, plus};
+enum class TokenType {exit, int_lit, semi, open_paren, close_paren, ident, may, equal, plus, star, sub, div};
+
+inline std::optional<int> bin_prec(const TokenType type) {
+    switch (type) {
+        case TokenType::star:
+        case TokenType::div:
+            return 1;
+        case TokenType::plus:
+        case TokenType::sub:
+            return 0;
+        default:
+            return {};
+    }
+}
 
 struct Token {
     TokenType type;
@@ -67,6 +80,18 @@ class Tokenizer {
                 } else if (peek().value() == '+') {
                     engulf();
                     tokens.push_back({.type = TokenType::plus});
+                    continue;
+                } else if (peek().value() == '*') {
+                    engulf();
+                    tokens.push_back({.type = TokenType::star});
+                    continue;
+                } else if (peek().value() == '/') {
+                    engulf();
+                    tokens.push_back({.type = TokenType::div});
+                    continue;
+                } else if (peek().value() == '-') {
+                    engulf();
+                    tokens.push_back({.type = TokenType::sub});
                     continue;
                 } else if (std::isspace(peek().value())) {
                     engulf();
