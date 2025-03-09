@@ -5,11 +5,20 @@ $$
         \begin{cases}
             \text{exit([Expr]);}\\
             \text{may\space\ ident = [Expr];}\\
+            \text{[Scope]}\\
+            \text{if ([Expr]) [Scope]} [\text{IfPred}]\\
         \end{cases}\\
     [\text{Expr}] &\to 
         \begin{cases}
             [\text{Term}]\\
-            [\text{BinExpr}]
+            [\text{BinExpr}]\\
+        \end{cases}\\
+    [\text{Scope}] &\to [\text{Statement*}]\\
+    [\text{IfPred}] &\to
+        \begin{cases}
+            \text{elif} [\text{Expr}] [\text{Scope}] [\text{IfPred}]\\
+            \text{else} [\text{Scope}]\\
+            \epsilon\\
         \end{cases}\\
     [\text{BinExpr}] &\to 
         \begin{cases}

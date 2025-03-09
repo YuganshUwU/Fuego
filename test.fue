@@ -1,4 +1,17 @@
-may z = 6;
-may x = 10 + (10 + 2 * 3) / 3 - 5;
-may w = x * z;
-exit(x);
+-- this might be your first comment, which can be implemented using double dashes.
+may x = 1;
+if (x - 1) {
+    may six_nine = 69;
+    exit(six_nine);
+} elif (x + 1) {
+    exit(68);
+} else {
+    exit(67);
+}
+
+/* this syntax could be used to print
+    a multi-lined comment to our code.
+    Hoping this might work
+*/
+
+exit(240);

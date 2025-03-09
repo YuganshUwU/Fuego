@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "generation.hpp"
-#include "arena.hpp"
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {

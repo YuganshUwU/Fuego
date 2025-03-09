@@ -56,11 +56,44 @@ struct NodeStmtExit {
 
 struct NodeStmtMay {
     Token ident;
-    NodeExpr* expr{};
+    NodeExpr* expr;
+};
+
+struct NodeStmt;
+
+struct NodeStmtScope {
+    std::vector<NodeStmt*> stmts;
+};
+
+struct NodeStmtIfPred;
+
+struct NodeStmtIfPredElif {
+    NodeExpr* expr;
+    NodeStmtScope* scope;
+    std::optional<NodeStmtIfPred*> pred;
+};
+
+struct NodeStmtIfPredElse {
+    NodeStmtScope* scope;
+};
+
+struct NodeStmtIfPred {
+    std::variant<NodeStmtIfPredElif*, NodeStmtIfPredElse*> var;
+};
+
+struct NodeStmtElse {
+    NodeExpr* expr;
+    NodeStmtScope* scope;
+};
+
+struct NodeStmtIf {
+    NodeExpr* expr;
+    NodeStmtScope* scope;
+    std::optional<NodeStmtIfPred*> pred;
 };
 
 struct NodeStmt {
-    std::variant<NodeStmtExit*, NodeStmtMay*> var;
+    std::variant<NodeStmtExit*, NodeStmtMay*, NodeStmtScope*, NodeStmtIf*> var;
 };
 
 struct NodeProg {
@@ -106,7 +139,7 @@ public:
         }
     }
 
-    std::optional<NodeExpr*> parse_expr(int min_prec = 0) {
+    std::optional<NodeExpr*> parse_expr(const int min_prec = 0) {
 
         std::optional<NodeTerm*> term_lhs = parse_term();
         if (!term_lhs.has_value()) {
@@ -128,8 +161,8 @@ public:
             } else
                 break;
 
-            Token op = engulf();
-            int next_min_prec = prec.value() + 1;
+            auto [type, value] = engulf();
+            const int next_min_prec = prec.value() + 1;
             auto expr_rhs = parse_expr(next_min_prec);
 
             if (!expr_rhs.has_value()) {
@@ -138,27 +171,27 @@ public:
             }
 
             auto expr = m_allocator.alloc<NodeBinExpr>();
-            auto expr_lhs_temp = m_allocator.alloc<NodeExpr>();
+            const auto expr_lhs_temp = m_allocator.alloc<NodeExpr>();
 
-            if (op.type == TokenType::plus) {
+            if (type == TokenType::plus) {
                 auto add = m_allocator.alloc<BinExprAdd>();
                 expr_lhs_temp->var = expr_lhs->var;
                 add->lhs = expr_lhs_temp;
                 add->rhs = expr_rhs.value();
                 expr->var = add;
-            } else if (op.type == TokenType::star) {
+            } else if (type == TokenType::star) {
                 auto multi = m_allocator.alloc<BinExprMulti>();
                 expr_lhs_temp->var = expr_lhs->var;
                 multi->lhs = expr_lhs_temp;
                 multi->rhs = expr_rhs.value();
                 expr->var = multi;
-            } else if (op.type == TokenType::sub) {
+            } else if (type == TokenType::minus) {
                 auto sub = m_allocator.alloc<BinExprSub>();
                 expr_lhs_temp->var = expr_lhs->var;
                 sub->lhs = expr_lhs_temp;
                 sub->rhs = expr_rhs.value();
                 expr->var = sub;
-            } else if (op.type == TokenType::div) {
+            } else if (type == TokenType::fslash) {
                 auto div = m_allocator.alloc<BinExprDiv>();
                 expr_lhs_temp->var = expr_lhs->var;
                 div->lhs = expr_lhs_temp;
@@ -170,6 +203,61 @@ public:
         }
 
         return expr_lhs;
+    }
+
+    std::optional<NodeStmtScope*> parse_scope() {
+        if (!try_engulf(TokenType::curly_open))
+            return {};
+
+        auto scope = m_allocator.alloc<NodeStmtScope>();
+        while (auto stmt = parse_stmt()) {
+            scope->stmts.push_back(stmt.value());
+        }
+
+        try_engulf(TokenType::curly_close, "Expected '}'");
+        return scope;
+    }
+
+    std::optional<NodeStmtIfPred*> parse_if_pred() {
+        if (try_engulf(TokenType::elif)) {
+            try_engulf(TokenType::open_paren, "Expected `(`");
+            const auto elif = m_allocator.alloc<NodeStmtIfPredElif>();
+            if (const auto expr = parse_expr()) {
+                elif->expr = expr.value();
+            } else {
+                std::cerr << "Expected an expression" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+
+            try_engulf(TokenType::close_paren, "Expected `)`");
+            if (const auto scope = parse_scope()) {
+                elif->scope = scope.value();
+            } else {
+                std::cerr << "Expected a scope" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+
+            elif->pred = parse_if_pred();
+            auto pred = m_allocator.alloc<NodeStmtIfPred>();
+            pred->var = elif;
+            return pred;
+        }
+
+        if (try_engulf(TokenType::else_)) {
+            auto else_ = m_allocator.alloc<NodeStmtIfPredElse>();
+            if (const auto scope = parse_scope()) {
+                else_->scope = scope.value();
+            } else {
+                std::cerr << "Expected scope" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+
+            const auto pred = m_allocator.alloc<NodeStmtIfPred>();
+            pred->var = else_;
+            return pred;
+        }
+
+        return {};
     }
 
     std::optional<NodeStmt*> parse_stmt() {
@@ -202,7 +290,7 @@ public:
             stmt_may->ident = engulf();
             engulf();
 
-            if (auto expr = parse_expr()) {
+            if (const auto expr = parse_expr()) {
                 stmt_may->expr = expr.value();
             } else {
                 std::cerr << "Invalid expression" << std::endl;
@@ -212,6 +300,38 @@ public:
             try_engulf(TokenType::semi, "Expected ';'");
             auto stmt = m_allocator.alloc<NodeStmt>();
             stmt->var = stmt_may;
+            return stmt;
+        } else if (peek().has_value() && peek().value().type == TokenType::curly_open) {
+            if (auto scope = parse_scope()) {
+                auto stmt = m_allocator.alloc<NodeStmt>();
+                stmt->var = scope.value();
+                return stmt;
+            } else {
+                std::cerr << "Invalid Scope" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+        } else if (auto if_ = try_engulf(TokenType::if_)) {
+            try_engulf(TokenType::open_paren, "Expected '('");
+            auto stmt_if = m_allocator.alloc<NodeStmtIf>();
+
+            if (const auto expr = parse_expr()) {
+                stmt_if->expr = expr.value();
+            } else {
+                std::cerr << "Invalid expression" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+
+            try_engulf(TokenType::close_paren, "Expected ')'");
+            if (const auto scope = parse_scope()) {
+                stmt_if->scope = scope.value();
+            } else {
+                std::cerr << "Invalid Scope" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+
+            stmt_if->pred = parse_if_pred();
+            auto stmt = m_allocator.alloc<NodeStmt>();
+            stmt->var = stmt_if;
             return stmt;
         }
         else
@@ -254,7 +374,7 @@ private:
         }
     }
 
-    inline std::optional<Token> try_engulf(TokenType type) {
+    inline std::optional<Token> try_engulf(const TokenType type) {
         if (peek().has_value() && peek().value().type == type) {
             return engulf();
         } else {
