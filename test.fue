@@ -2,10 +2,6 @@
 may x = 10;
 if (1 - 1) {
     x = 1;
-} elif (1 * 0) {
-    x = 2;
-} else {
-    x = 3;
 }
 
 /* this syntax could be used to print

@@ -5,22 +5,23 @@
 
 class ArenaAllocator {
 public:
-    inline explicit ArenaAllocator (const size_t bytes) : m_size (bytes) {
+    explicit ArenaAllocator (const size_t bytes) : m_size (bytes) {
         m_buffer = static_cast<std::byte*>(malloc(m_size));
         m_offset = m_buffer;
     }
 
     template <typename T>
-    inline T* alloc () {
+    T* alloc () {
         void* offset = m_offset;
         m_offset += sizeof(T);
         return static_cast<T*>(offset);
     }
 
-    inline ArenaAllocator (const ArenaAllocator & other) = delete;
-    inline ArenaAllocator operator=(const ArenaAllocator & other) = delete;
+    ArenaAllocator (const ArenaAllocator & other) = delete;
 
-    inline ~ArenaAllocator () {
+    ArenaAllocator operator=(const ArenaAllocator & other) = delete;
+
+    ~ArenaAllocator () {
         free(m_buffer);
     }
 

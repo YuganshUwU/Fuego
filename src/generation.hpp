@@ -4,7 +4,7 @@
 
 class Generator {
 public:
-    inline explicit Generator(NodeProg prog) : m_prog(std::move(prog)) {
+    explicit Generator(NodeProg prog) : m_prog(std::move(prog)) {
 
     }
 
@@ -123,8 +123,8 @@ public:
                 gen.m_output << "    jz " << label << "\n";
                 gen.gen_scope(elif->scope);
                 gen.m_output << "    jmp " << end_label << "\n";
+                gen.m_output << label << ":\n";
                 if (elif->pred.has_value()) {
-                    gen.m_output << label << ":\n";
                     gen.gen_if_pred(elif->pred.value(), end_label);
                 }
             }
