@@ -137,7 +137,7 @@ class Tokenizer {
         const std::string m_src;
         size_t  m_index = 0;
 
-         [[nodiscard]] inline std::optional<char> peek(int offset = 0) const {
+         [[nodiscard]] inline std::optional<char> peek(const int offset = 0) const {
             if (m_index + offset >= m_src.length()) {
                 return  {};
             } else

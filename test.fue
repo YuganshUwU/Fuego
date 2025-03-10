@@ -1,17 +1,16 @@
 -- this might be your first comment, which can be implemented using double dashes.
-may x = 1;
-if (x - 1) {
-    may six_nine = 69;
-    exit(six_nine);
-} elif (x + 1) {
-    exit(68);
+may x = 10;
+if (1 - 1) {
+    x = 1;
+} elif (1 * 0) {
+    x = 2;
 } else {
-    exit(67);
+    x = 3;
 }
 
 /* this syntax could be used to print
     a multi-lined comment to our code.
-    Hoping this might work
+    Hoping this might work :)
 */
 
-exit(240);
+exit(x);

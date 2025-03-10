@@ -150,7 +150,7 @@ public:
             }
 
             void operator()(const NodeStmtMay* stmt_may) const {
-                auto it = std::find_if(gen.m_vars.cbegin(), gen.m_vars.cend(),
+                const auto it = std::find_if(gen.m_vars.cbegin(), gen.m_vars.cend(),
                     [&](const Vars& var) { return var.name == stmt_may->ident.value.value();
                 });
 
@@ -160,6 +160,21 @@ public:
                 }
                 gen.m_vars.push_back({.name = stmt_may->ident.value.value(), .stack_loc = gen.m_stack_size});
                 gen.gen_expr(stmt_may->expr);
+            }
+
+            void operator()(const NodeStmtAssign* stmt_assign) const {
+                const auto it = std::find_if(gen.m_vars.cbegin(), gen.m_vars.cend(),
+                    [&](const Vars& var) { return var.name == stmt_assign->ident.value.value();
+                });
+
+                if (it == gen.m_vars.cend()) {
+                    std::cerr << "Undeclared Identifier" << stmt_assign->ident.value.value() << std::endl;
+                    exit(EXIT_FAILURE);
+                }
+
+                gen.gen_expr(stmt_assign->expr);
+                gen.pop("rax");
+                gen.m_output << "    mov [rsp + " << (gen.m_stack_size - it->stack_loc - 1) * 8 << "], rax\n";
             }
 
             void operator()(const NodeStmtScope* stmt_scope) const {
@@ -173,11 +188,14 @@ public:
                 gen.m_output << "    test rax, rax\n";
                 gen.m_output << "    jz " << label << "\n";
                 gen.gen_scope(stmt_if->scope);
-                gen.m_output << label << ":\n";
                 if (stmt_if->pred.has_value()) {
                     const std::string end_label = gen.create_label();
+                    gen.m_output << "    jmp " << end_label << "\n";
+                    gen.m_output << label << ":\n";
                     gen.gen_if_pred(stmt_if->pred.value(), end_label);
                     gen.m_output << end_label << ":\n";
+                } else {
+                    gen.m_output << label << ":\n";
                 }
             }
         };

@@ -92,8 +92,13 @@ struct NodeStmtIf {
     std::optional<NodeStmtIfPred*> pred;
 };
 
+struct NodeStmtAssign {
+    Token ident;
+    NodeExpr* expr;
+};
+
 struct NodeStmt {
-    std::variant<NodeStmtExit*, NodeStmtMay*, NodeStmtScope*, NodeStmtIf*> var;
+    std::variant<NodeStmtExit*, NodeStmtMay*, NodeStmtScope*, NodeStmtIf*, NodeStmtAssign*> var;
 };
 
 struct NodeProg {
@@ -282,7 +287,9 @@ public:
             stmt->var = stmt_exit;
             return stmt;
 
-        } else if (peek().has_value() && peek().value().type == TokenType::may &&
+        }
+
+        if (peek().has_value() && peek().value().type == TokenType::may &&
             peek(1).has_value() && peek(1).value().type == TokenType::ident
             && peek(2).has_value() && peek(2).value().type == TokenType::equal) {
             engulf();
@@ -301,7 +308,28 @@ public:
             auto stmt = m_allocator.alloc<NodeStmt>();
             stmt->var = stmt_may;
             return stmt;
-        } else if (peek().has_value() && peek().value().type == TokenType::curly_open) {
+        }
+
+        if (peek().has_value() && peek().value().type == TokenType::ident &&
+            peek(1).has_value() && peek(1).value().type == TokenType::equal) {
+            const auto assign = m_allocator.alloc<NodeStmtAssign>();
+            assign->ident = engulf();
+            engulf();
+
+            if (const auto expr = parse_expr()) {
+                assign->expr = expr.value();
+            } else {
+                std::cerr << "Expected an expression" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+
+            try_engulf(TokenType::semi, "Expected ';'");
+            auto stmt = m_allocator.alloc<NodeStmt>();
+            stmt->var = assign;
+            return stmt;
+        }
+
+        if (peek().has_value() && peek().value().type == TokenType::curly_open) {
             if (auto scope = parse_scope()) {
                 auto stmt = m_allocator.alloc<NodeStmt>();
                 stmt->var = scope.value();
@@ -310,7 +338,9 @@ public:
                 std::cerr << "Invalid Scope" << std::endl;
                 exit(EXIT_FAILURE);
             }
-        } else if (auto if_ = try_engulf(TokenType::if_)) {
+        }
+
+        if (auto if_ = try_engulf(TokenType::if_)) {
             try_engulf(TokenType::open_paren, "Expected '('");
             auto stmt_if = m_allocator.alloc<NodeStmtIf>();
 
@@ -334,8 +364,8 @@ public:
             stmt->var = stmt_if;
             return stmt;
         }
-        else
-            return {};
+
+        return {};
     }
 
     std::optional<NodeProg> parse_prog() {
