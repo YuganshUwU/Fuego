@@ -79,6 +79,112 @@ public:
                 gen.m_output << "    div rbx\n";
                 gen.push("rax");
             }
+
+            void operator()(const BinExprGreater* expr_greater) const {
+                gen.gen_expr(expr_greater->rhs);
+                gen.pop("rbx");
+                gen.gen_expr(expr_greater->lhs);
+                gen.pop("rax");
+                const std::string label = gen.create_label();
+                const std::string newLabel = gen.create_label();
+                gen.m_output << "    cmp rax, rbx\n";
+                gen.m_output << "    jg " << label << "\n";
+                gen.m_output << "    mov rax, 0\n";
+                gen.m_output << "    jmp " << newLabel << "\n\n";
+                gen.m_output << label <<":\n";
+                gen.m_output << "    mov rax, 1\n";
+                gen.m_output << newLabel <<":\n";
+                gen.push("rax");
+            }
+
+            void operator()(const BinExprLess* less) const {
+                gen.gen_expr(less->rhs);
+                gen.gen_expr(less->lhs);
+                gen.pop("rax");
+                gen.pop("rbx");
+                const std::string label = gen.create_label();
+                const std::string newLabel = gen.create_label();
+
+                gen.m_output << "    cmp rax, rbx\n";
+                gen.m_output << "    jl " << label << "\n";
+                gen.m_output << "    mov rax, 0\n";
+                gen.m_output << "    jmp " << newLabel << "\n\n";
+                gen.m_output << label <<":\n";
+                gen.m_output << "    mov rax, 1\n";
+                gen.m_output << newLabel <<":\n";
+                gen.push("rax");
+            }
+
+            void operator() (const BinExprEqual* expr_equal) const {
+                gen.gen_expr(expr_equal->rhs);
+                gen.gen_expr(expr_equal->lhs);
+                gen.pop("rax");
+                gen.pop("rbx");
+                const std::string label = gen.create_label();
+                const std::string newLabel = gen.create_label();
+
+                gen.m_output << "    cmp rax, rbx\n";
+                gen.m_output << "    je " << label << "\n";
+                gen.m_output << "    mov rax, 0\n";
+                gen.m_output << "    jmp " << newLabel << "\n\n";
+                gen.m_output << label <<":\n";
+                gen.m_output << "    mov rax, 1\n";
+                gen.m_output << newLabel <<":\n";
+                gen.push("rax");
+            }
+
+            void operator()(const BinExprGreaterEqual* expr_greater_equal) const {
+                gen.gen_expr(expr_greater_equal->rhs);
+                gen.gen_expr(expr_greater_equal->lhs);
+                gen.pop("rax");
+                gen.pop("rbx");
+                const std::string label = gen.create_label();
+                const std::string newLabel = gen.create_label();
+                gen.m_output << "    cmp rax, rbx\n";
+                gen.m_output << "    jge " << label << "\n";
+                gen.m_output << "    mov rax, 0\n";
+                gen.m_output << "    jmp " << newLabel << "\n\n";
+                gen.m_output << label <<":\n";
+                gen.m_output << "    mov rax, 1\n";
+                gen.m_output << newLabel <<":\n";
+                gen.push("rax");
+            }
+
+            void operator()(const BinExprLessEqual* expr_less_equal) const {
+                gen.gen_expr(expr_less_equal->rhs);
+                gen.gen_expr(expr_less_equal->lhs);
+                gen.pop("rax");
+                gen.pop("rbx");
+                const std::string label = gen.create_label();
+                const std::string newLabel = gen.create_label();
+
+                gen.m_output << "    cmp rax, rbx\n";
+                gen.m_output << "    jle " << label << "\n";
+                gen.m_output << "    mov rax, 0\n";
+                gen.m_output << "    jmp " << newLabel << "\n\n";
+                gen.m_output << label <<":\n";
+                gen.m_output << "    mov rax, 1\n";
+                gen.m_output << newLabel <<":\n";
+                gen.push("rax");
+            }
+
+            void operator()(const BinExprNotEqual* expr_not_equal) const {
+                gen.gen_expr(expr_not_equal->rhs);
+                gen.gen_expr(expr_not_equal->lhs);
+                gen.pop("rax");
+                gen.pop("rbx");
+                const std::string label = gen.create_label();
+                const std::string newLabel = gen.create_label();
+
+                gen.m_output << "    cmp rax, rbx\n";
+                gen.m_output << "    jne " << label << "\n";
+                gen.m_output << "    mov rax, 0\n";
+                gen.m_output << "    jmp " << newLabel << "\n\n";
+                gen.m_output << label <<":\n";
+                gen.m_output << "    mov rax, 1\n";
+                gen.m_output << newLabel <<":\n";
+                gen.push("rax");
+            }
         };
 
         BinExprVisitor visitor({.gen = *this});

@@ -38,8 +38,40 @@ struct BinExprDiv {
     NodeExpr* rhs;
 };
 
+struct BinExprGreater {
+    NodeExpr* lhs;
+    NodeExpr* rhs;
+};
+
+struct BinExprLess {
+    NodeExpr* lhs;
+    NodeExpr* rhs;
+};
+
+struct BinExprEqual {
+    NodeExpr* lhs;
+    NodeExpr* rhs;
+};
+
+struct BinExprGreaterEqual {
+    NodeExpr* lhs;
+    NodeExpr* rhs;
+};
+
+struct BinExprLessEqual {
+    NodeExpr* lhs;
+    NodeExpr* rhs;
+};
+
+struct BinExprNotEqual {
+    NodeExpr* lhs;
+    NodeExpr* rhs;
+};
+
 struct NodeBinExpr {
-    std::variant<BinExprAdd*, BinExprMulti*, BinExprSub*, BinExprDiv*> var;
+    std::variant<BinExprAdd*, BinExprMulti*, BinExprSub*, BinExprDiv*,
+                 BinExprGreater*, BinExprLess*, BinExprEqual*, BinExprGreaterEqual*,
+                 BinExprLessEqual*, BinExprNotEqual*> var;
 };
 
 struct NodeTerm {
@@ -56,7 +88,7 @@ struct NodeStmtExit {
 
 struct NodeStmtMay {
     Token ident;
-    NodeExpr* expr;
+    NodeExpr* expr{};
 };
 
 struct NodeStmt;
@@ -68,8 +100,8 @@ struct NodeStmtScope {
 struct NodeStmtIfPred;
 
 struct NodeStmtIfPredElif {
-    NodeExpr* expr;
-    NodeStmtScope* scope;
+    NodeExpr* expr{};
+    NodeStmtScope* scope{};
     std::optional<NodeStmtIfPred*> pred;
 };
 
@@ -87,14 +119,14 @@ struct NodeStmtElse {
 };
 
 struct NodeStmtIf {
-    NodeExpr* expr;
-    NodeStmtScope* scope;
+    NodeExpr* expr{};
+    NodeStmtScope* scope{};
     std::optional<NodeStmtIfPred*> pred;
 };
 
 struct NodeStmtAssign {
     Token ident;
-    NodeExpr* expr;
+    NodeExpr* expr{};
 };
 
 struct NodeStmt {
@@ -208,6 +240,42 @@ public:
                 div->lhs = expr_lhs_temp;
                 div->rhs = expr_rhs.value();
                 expr->var = div;
+            } else if (type == TokenType::big) {
+                auto greater = m_allocator.alloc<BinExprGreater>();
+                expr_lhs_temp->var = expr_lhs->var;
+                greater->lhs = expr_lhs_temp;
+                greater->rhs = expr_rhs.value();
+                expr->var = greater;
+            } else if (type == TokenType::small) {
+                auto less = m_allocator.alloc<BinExprLess>();
+                expr_lhs_temp->var = expr_lhs->var;
+                less->lhs = expr_lhs_temp;
+                less->rhs = expr_rhs.value();
+                expr->var = less;
+            } else if (type == TokenType::iseq) {
+                auto eq= m_allocator.alloc<BinExprEqual>();
+                expr_lhs_temp->var = expr_lhs->var;
+                eq->lhs = expr_lhs_temp;
+                eq->rhs = expr_rhs.value();
+                expr->var = eq;
+            } else if (type == TokenType::big_eq) {
+                auto greater = m_allocator.alloc<BinExprGreaterEqual>();
+                expr_lhs_temp->var = expr_lhs->var;
+                greater->lhs = expr_lhs_temp;
+                greater->rhs = expr_rhs.value();
+                expr->var = greater;
+            } else if (type == TokenType::small_eq) {
+                auto less = m_allocator.alloc<BinExprLessEqual>();
+                expr_lhs_temp->var = expr_lhs->var;
+                less->lhs = expr_lhs_temp;
+                less->rhs = expr_rhs.value();
+                expr->var = less;
+            } else if (type == TokenType::no_eq) {
+                auto not_equal = m_allocator.alloc<BinExprNotEqual>();
+                expr_lhs_temp->var = expr_lhs->var;
+                not_equal->lhs = expr_lhs_temp;
+                not_equal->rhs = expr_rhs.value();
+                expr->var = not_equal;
             }
 
             expr_lhs->var = expr;
@@ -379,7 +447,7 @@ public:
 
 private:
 
-    [[nodiscard]] inline std::optional<Token> peek(int offset = 0) const {
+    [[nodiscard]] inline std::optional<Token> peek(const int offset = 0) const {
         if (m_index + offset >= m_tokens.size()) {
             return {};
         }

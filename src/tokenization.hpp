@@ -2,16 +2,26 @@
 
 enum class TokenType {exit, int_lit, semi, open_paren, close_paren, ident, may,
                       equal, plus, star, minus, fslash, curly_open, curly_close,
-                      if_, elif, else_ };
+                      if_, elif, else_, big, small, iseq, big_eq, small_eq, no_eq};
 
 inline std::optional<int> bin_prec(const TokenType type) {
     switch (type) {
         case TokenType::star:
         case TokenType::fslash:
-            return 1;
+            return 2;
+
         case TokenType::plus:
         case TokenType::minus:
+            return 1;
+
+        case TokenType::big:
+        case TokenType::small:
+        case TokenType::iseq:
+        case TokenType::big_eq:
+        case TokenType::small_eq:
+        case TokenType::no_eq:
             return 0;
+
         default:
             return {};
     }
@@ -26,7 +36,7 @@ struct Token {
 class Tokenizer {
 
     public:
-    explicit Tokenizer(const std::string& src) : m_src(move(src)) {
+    explicit Tokenizer(std::string  src) : m_src(std::move(src)) {
 
         }
 
@@ -105,7 +115,7 @@ class Tokenizer {
                 }else if (peek().value() == ';') {
                     engulf();
                     tokens.push_back({TokenType::semi, line_count});
-                } else if (peek().value() == '=') {
+                } else if (peek().value() == '=' && peek(1).has_value() && peek(1).value() != '=') {
                     engulf();
                     tokens.push_back({TokenType::equal, line_count});
                 } else if (peek().value() == '+') {
@@ -126,11 +136,32 @@ class Tokenizer {
                 } else if (peek().value() == '}') {
                     engulf();
                     tokens.push_back({TokenType::curly_close, line_count});
+                } else if (peek().value() == '>' && peek(1).has_value() && peek(1).value() != '=') {
+                    engulf();
+                    tokens.push_back({TokenType::big, line_count});
+                } else if (peek().value() == '<' && peek(1).has_value() && peek(1).value() != '=') {
+                    engulf();
+                    tokens.push_back({TokenType::small, line_count});
+                } else if (peek().value() == '=' && peek(1).has_value() && peek(1).value() == '=') {
+                    engulf();
+                    engulf();
+                    tokens.push_back({TokenType::iseq, line_count});
+                } else if (peek().value() == '>' && peek(1).has_value() && peek(1).value() == '=') {
+                    engulf();
+                    engulf();
+                    tokens.push_back({TokenType::big_eq, line_count});
+                } else if (peek().value() == '<' && peek(1).has_value() && peek(1).value() == '=') {
+                    engulf();
+                    engulf();
+                    tokens.push_back({TokenType::small_eq, line_count});
+                } else if (peek().value() == '!' && peek(1).has_value() && peek(1).value() == '=') {
+                    engulf();
+                    engulf();
+                    tokens.push_back({TokenType::no_eq, line_count});
                 } else if (peek().value() == '\n') {
                     engulf();
                     line_count++;
-                }
-                else if (std::isspace(peek().value())) {
+                } else if (std::isspace(peek().value())) {
                     engulf();
                 } else {
                     std::cerr << "Invalid Token!" << std::endl;
