@@ -1,13 +1,11 @@
 --write your code here
-may x = 101;
-may y = 101;
+may x = 9;
+may y = 10;
 
-if(x > y) {
-    x = 0;
-} elif (x < y ) {
-    x = 1;
-} elif (x == y) {
-    x = (x != y);
+while (x <= y) {
+    --entering the while loop
+    x = x + 1;
+    y = y + 1;
 }
 
-exit(x);
+exit(y);

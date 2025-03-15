@@ -15,122 +15,127 @@ struct NodeTermIdent {
 struct NodeExpr;
 
 struct NodeTermParen {
-    NodeExpr* expr;
+    NodeExpr *expr;
 };
 
 struct BinExprAdd {
-    NodeExpr* lhs;
-    NodeExpr* rhs;
+    NodeExpr *lhs;
+    NodeExpr *rhs;
 };
 
 struct BinExprMulti {
-    NodeExpr* lhs;
-    NodeExpr* rhs;
+    NodeExpr *lhs;
+    NodeExpr *rhs;
 };
 
 struct BinExprSub {
-    NodeExpr* lhs;
-    NodeExpr* rhs;
+    NodeExpr *lhs;
+    NodeExpr *rhs;
 };
 
 struct BinExprDiv {
-    NodeExpr* lhs;
-    NodeExpr* rhs;
+    NodeExpr *lhs;
+    NodeExpr *rhs;
 };
 
 struct BinExprGreater {
-    NodeExpr* lhs;
-    NodeExpr* rhs;
+    NodeExpr *lhs;
+    NodeExpr *rhs;
 };
 
 struct BinExprLess {
-    NodeExpr* lhs;
-    NodeExpr* rhs;
+    NodeExpr *lhs;
+    NodeExpr *rhs;
 };
 
 struct BinExprEqual {
-    NodeExpr* lhs;
-    NodeExpr* rhs;
+    NodeExpr *lhs;
+    NodeExpr *rhs;
 };
 
 struct BinExprGreaterEqual {
-    NodeExpr* lhs;
-    NodeExpr* rhs;
+    NodeExpr *lhs;
+    NodeExpr *rhs;
 };
 
 struct BinExprLessEqual {
-    NodeExpr* lhs;
-    NodeExpr* rhs;
+    NodeExpr *lhs;
+    NodeExpr *rhs;
 };
 
 struct BinExprNotEqual {
-    NodeExpr* lhs;
-    NodeExpr* rhs;
+    NodeExpr *lhs;
+    NodeExpr *rhs;
 };
 
 struct NodeBinExpr {
-    std::variant<BinExprAdd*, BinExprMulti*, BinExprSub*, BinExprDiv*,
-                 BinExprGreater*, BinExprLess*, BinExprEqual*, BinExprGreaterEqual*,
-                 BinExprLessEqual*, BinExprNotEqual*> var;
+    std::variant<BinExprAdd *, BinExprMulti *, BinExprSub *, BinExprDiv *,
+        BinExprGreater *, BinExprLess *, BinExprEqual *, BinExprGreaterEqual *,
+        BinExprLessEqual *, BinExprNotEqual *> var;
 };
 
 struct NodeTerm {
-    std::variant<NodeTermIntLit*, NodeTermIdent*, NodeTermParen*> var;
+    std::variant<NodeTermIntLit *, NodeTermIdent *, NodeTermParen *> var;
 };
 
 struct NodeExpr {
-    std::variant<NodeTerm* , NodeBinExpr*> var;
+    std::variant<NodeTerm *, NodeBinExpr *> var;
 };
 
 struct NodeStmtExit {
-    NodeExpr* expr;
+    NodeExpr *expr;
 };
 
 struct NodeStmtMay {
     Token ident;
-    NodeExpr* expr{};
+    NodeExpr *expr{};
 };
 
 struct NodeStmt;
 
 struct NodeStmtScope {
-    std::vector<NodeStmt*> stmts;
+    std::vector<NodeStmt *> stmts;
 };
 
 struct NodeStmtIfPred;
 
 struct NodeStmtIfPredElif {
-    NodeExpr* expr{};
-    NodeStmtScope* scope{};
-    std::optional<NodeStmtIfPred*> pred;
+    NodeExpr *expr{};
+    NodeStmtScope *scope{};
+    std::optional<NodeStmtIfPred *> pred;
 };
 
 struct NodeStmtIfPredElse {
-    NodeStmtScope* scope;
+    NodeStmtScope *scope;
 };
 
 struct NodeStmtIfPred {
-    std::variant<NodeStmtIfPredElif*, NodeStmtIfPredElse*> var;
+    std::variant<NodeStmtIfPredElif *, NodeStmtIfPredElse *> var;
 };
 
 struct NodeStmtElse {
-    NodeExpr* expr;
-    NodeStmtScope* scope;
+    NodeExpr *expr;
+    NodeStmtScope *scope;
 };
 
 struct NodeStmtIf {
-    NodeExpr* expr{};
-    NodeStmtScope* scope{};
-    std::optional<NodeStmtIfPred*> pred;
+    NodeExpr *expr{};
+    NodeStmtScope *scope{};
+    std::optional<NodeStmtIfPred *> pred;
 };
 
 struct NodeStmtAssign {
     Token ident;
-    NodeExpr* expr{};
+    NodeExpr *expr{};
+};
+
+struct NodeStmtWhile {
+    NodeExpr *expr{};
+    NodeStmtScope *scope{};
 };
 
 struct NodeStmt {
-    std::variant<NodeStmtExit*, NodeStmtMay*, NodeStmtScope*, NodeStmtIf*, NodeStmtAssign*> var;
+    std::variant<NodeStmtExit *, NodeStmtMay *, NodeStmtScope *, NodeStmtIf *, NodeStmtAssign *, NodeStmtWhile *> var;
 };
 
 struct NodeProg {
@@ -139,17 +144,15 @@ struct NodeProg {
 
 class Parser {
 public:
-    explicit Parser(std::vector<Token> tokens) : m_tokens(std::move(tokens)),m_allocator(1024 * 1024 * 4) {
-
+    explicit Parser(std::vector<Token> tokens) : m_tokens(std::move(tokens)), m_allocator(1024 * 1024 * 4) {
     }
 
-     void get_error(const std::string& msg) const {
+    void get_error(const std::string &msg) const {
         std::cerr << "[Parse Error] Expected " << msg << " on line " << peek(-1)->line << "\n";
         exit(EXIT_FAILURE);
     }
 
-    std::optional<NodeTerm*> parse_term() {
-
+    std::optional<NodeTerm *> parse_term() {
         if (const auto int_lit = try_engulf(TokenType::int_lit)) {
             auto term_int_lit = m_allocator.alloc<NodeTermIntLit>();
             term_int_lit->int_lit = int_lit.value();
@@ -183,9 +186,8 @@ public:
         return {};
     }
 
-    std::optional<NodeExpr*> parse_expr(const int min_prec = 0) {
-
-        std::optional<NodeTerm*> term_lhs = parse_term();
+    std::optional<NodeExpr *> parse_expr(const int min_prec = 0) {
+        std::optional<NodeTerm *> term_lhs = parse_term();
         if (!term_lhs.has_value()) {
             return {};
         }
@@ -253,7 +255,7 @@ public:
                 less->rhs = expr_rhs.value();
                 expr->var = less;
             } else if (type == TokenType::iseq) {
-                auto eq= m_allocator.alloc<BinExprEqual>();
+                auto eq = m_allocator.alloc<BinExprEqual>();
                 expr_lhs_temp->var = expr_lhs->var;
                 eq->lhs = expr_lhs_temp;
                 eq->rhs = expr_rhs.value();
@@ -284,7 +286,7 @@ public:
         return expr_lhs;
     }
 
-    std::optional<NodeStmtScope*> parse_scope() {
+    std::optional<NodeStmtScope *> parse_scope() {
         if (!try_engulf(TokenType::curly_open))
             return {};
 
@@ -297,7 +299,7 @@ public:
         return scope;
     }
 
-    std::optional<NodeStmtIfPred*> parse_if_pred() {
+    std::optional<NodeStmtIfPred *> parse_if_pred() {
         if (try_engulf(TokenType::elif)) {
             try_engulf(TokenType::open_paren, "Expected `(`");
             const auto elif = m_allocator.alloc<NodeStmtIfPredElif>();
@@ -336,7 +338,7 @@ public:
         return {};
     }
 
-    std::optional<NodeStmt*> parse_stmt() {
+    std::optional<NodeStmt *> parse_stmt() {
         if (peek().has_value() && peek().value().type == TokenType::exit &&
             peek(1).has_value() && peek(1).value().type == TokenType::open_paren) {
             engulf();
@@ -356,7 +358,6 @@ public:
             auto stmt = m_allocator.alloc<NodeStmt>();
             stmt->var = stmt_exit;
             return stmt;
-
         }
 
         if (peek().has_value() && peek().value().type == TokenType::may &&
@@ -429,6 +430,24 @@ public:
             return stmt;
         }
 
+        if (try_engulf(TokenType::w_loop)) {
+            try_engulf(TokenType::open_paren, "'('");
+            auto stmt_while = m_allocator.alloc<NodeStmtWhile>();
+            if (const auto expr = parse_expr()) {
+                stmt_while->expr = expr.value();
+            } else {
+                get_error("Expression");
+            }
+
+            try_engulf(TokenType::close_paren, "')'");
+            if (const auto scope = parse_scope()) {
+                stmt_while->scope = scope.value();
+            }
+            auto stmt = m_allocator.alloc<NodeStmt>();
+            stmt->var = stmt_while;
+            return stmt;
+        }
+
         return {};
     }
 
@@ -446,7 +465,6 @@ public:
     }
 
 private:
-
     [[nodiscard]] inline std::optional<Token> peek(const int offset = 0) const {
         if (m_index + offset >= m_tokens.size()) {
             return {};
@@ -458,7 +476,7 @@ private:
         return m_tokens.at(m_index++);
     }
 
-    Token try_engulf(const TokenType type, const std::string& err_msg) {
+    Token try_engulf(const TokenType type, const std::string &err_msg) {
         if (peek().has_value() && peek().value().type == type) {
             return engulf();
         }

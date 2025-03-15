@@ -5,21 +5,22 @@
 class Generator {
 public:
     explicit Generator(NodeProg prog) : m_prog(std::move(prog)) {
-
     }
 
-    void gen_term(const NodeTerm* term) {
+    void gen_term(const NodeTerm *term) {
         struct TermVisitor {
-            Generator& gen;
+            Generator &gen;
 
-            void operator()(const NodeTermIntLit* term_int_lit) const {
+            void operator()(const NodeTermIntLit *term_int_lit) const {
                 gen.m_output << "    mov rax, " << term_int_lit->int_lit.value.value() << "\n";
                 gen.push("rax");
             }
 
-            void operator()(const NodeTermIdent* term_ident) const {
+            void operator()(const NodeTermIdent *term_ident) const {
                 const auto it = std::find_if(gen.m_vars.cbegin(), gen.m_vars.cend(),
-                    [&](const Vars& var) { return var.name == term_ident->ident.value.value();});
+                                             [&](const Vars &var) {
+                                                 return var.name == term_ident->ident.value.value();
+                                             });
                 if (it == gen.m_vars.cend()) {
                     std::cerr << "ERROR: Unknown identifier '" << term_ident->ident.value.value() << "'\n";
                     exit(EXIT_FAILURE);
@@ -30,7 +31,7 @@ public:
                 gen.push(offset.str());
             }
 
-            void operator()(const NodeTermParen* term_paren) const {
+            void operator()(const NodeTermParen *term_paren) const {
                 gen.gen_expr(term_paren->expr);
             }
         };
@@ -40,11 +41,11 @@ public:
         std::visit(visitor, term->var);
     }
 
-    void gen_bin_expr(const NodeBinExpr* bin_expr) {
+    void gen_bin_expr(const NodeBinExpr *bin_expr) {
         struct BinExprVisitor {
-            Generator& gen;
+            Generator &gen;
 
-            void operator()(const BinExprAdd* expr_add) const {
+            void operator()(const BinExprAdd *expr_add) const {
                 gen.gen_expr(expr_add->rhs);
                 gen.gen_expr(expr_add->lhs);
                 gen.pop("rax");
@@ -53,7 +54,7 @@ public:
                 gen.push("rax");
             }
 
-            void operator()(const BinExprMulti* expr_multi) const {
+            void operator()(const BinExprMulti *expr_multi) const {
                 gen.gen_expr(expr_multi->rhs);
                 gen.gen_expr(expr_multi->lhs);
                 gen.pop("rax");
@@ -62,7 +63,7 @@ public:
                 gen.push("rax");
             }
 
-            void operator()(const BinExprSub* expr_sub) const {
+            void operator()(const BinExprSub *expr_sub) const {
                 gen.gen_expr(expr_sub->rhs);
                 gen.gen_expr(expr_sub->lhs);
                 gen.pop("rax");
@@ -71,7 +72,7 @@ public:
                 gen.push("rax");
             }
 
-            void operator()(const BinExprDiv* expr_div) const {
+            void operator()(const BinExprDiv *expr_div) const {
                 gen.gen_expr(expr_div->rhs);
                 gen.gen_expr(expr_div->lhs);
                 gen.pop("rax");
@@ -80,24 +81,24 @@ public:
                 gen.push("rax");
             }
 
-            void operator()(const BinExprGreater* expr_greater) const {
+            void operator()(const BinExprGreater *expr_greater) const {
                 gen.gen_expr(expr_greater->rhs);
-                gen.pop("rbx");
                 gen.gen_expr(expr_greater->lhs);
                 gen.pop("rax");
+                gen.pop("rbx");
                 const std::string label = gen.create_label();
                 const std::string newLabel = gen.create_label();
                 gen.m_output << "    cmp rax, rbx\n";
                 gen.m_output << "    jg " << label << "\n";
                 gen.m_output << "    mov rax, 0\n";
                 gen.m_output << "    jmp " << newLabel << "\n\n";
-                gen.m_output << label <<":\n";
+                gen.m_output << label << ":\n";
                 gen.m_output << "    mov rax, 1\n";
-                gen.m_output << newLabel <<":\n";
+                gen.m_output << newLabel << ":\n";
                 gen.push("rax");
             }
 
-            void operator()(const BinExprLess* less) const {
+            void operator()(const BinExprLess *less) const {
                 gen.gen_expr(less->rhs);
                 gen.gen_expr(less->lhs);
                 gen.pop("rax");
@@ -109,13 +110,13 @@ public:
                 gen.m_output << "    jl " << label << "\n";
                 gen.m_output << "    mov rax, 0\n";
                 gen.m_output << "    jmp " << newLabel << "\n\n";
-                gen.m_output << label <<":\n";
+                gen.m_output << label << ":\n";
                 gen.m_output << "    mov rax, 1\n";
-                gen.m_output << newLabel <<":\n";
+                gen.m_output << newLabel << ":\n";
                 gen.push("rax");
             }
 
-            void operator() (const BinExprEqual* expr_equal) const {
+            void operator()(const BinExprEqual *expr_equal) const {
                 gen.gen_expr(expr_equal->rhs);
                 gen.gen_expr(expr_equal->lhs);
                 gen.pop("rax");
@@ -127,13 +128,13 @@ public:
                 gen.m_output << "    je " << label << "\n";
                 gen.m_output << "    mov rax, 0\n";
                 gen.m_output << "    jmp " << newLabel << "\n\n";
-                gen.m_output << label <<":\n";
+                gen.m_output << label << ":\n";
                 gen.m_output << "    mov rax, 1\n";
-                gen.m_output << newLabel <<":\n";
+                gen.m_output << newLabel << ":\n";
                 gen.push("rax");
             }
 
-            void operator()(const BinExprGreaterEqual* expr_greater_equal) const {
+            void operator()(const BinExprGreaterEqual *expr_greater_equal) const {
                 gen.gen_expr(expr_greater_equal->rhs);
                 gen.gen_expr(expr_greater_equal->lhs);
                 gen.pop("rax");
@@ -144,13 +145,13 @@ public:
                 gen.m_output << "    jge " << label << "\n";
                 gen.m_output << "    mov rax, 0\n";
                 gen.m_output << "    jmp " << newLabel << "\n\n";
-                gen.m_output << label <<":\n";
+                gen.m_output << label << ":\n";
                 gen.m_output << "    mov rax, 1\n";
-                gen.m_output << newLabel <<":\n";
+                gen.m_output << newLabel << ":\n";
                 gen.push("rax");
             }
 
-            void operator()(const BinExprLessEqual* expr_less_equal) const {
+            void operator()(const BinExprLessEqual *expr_less_equal) const {
                 gen.gen_expr(expr_less_equal->rhs);
                 gen.gen_expr(expr_less_equal->lhs);
                 gen.pop("rax");
@@ -162,13 +163,13 @@ public:
                 gen.m_output << "    jle " << label << "\n";
                 gen.m_output << "    mov rax, 0\n";
                 gen.m_output << "    jmp " << newLabel << "\n\n";
-                gen.m_output << label <<":\n";
+                gen.m_output << label << ":\n";
                 gen.m_output << "    mov rax, 1\n";
-                gen.m_output << newLabel <<":\n";
+                gen.m_output << newLabel << ":\n";
                 gen.push("rax");
             }
 
-            void operator()(const BinExprNotEqual* expr_not_equal) const {
+            void operator()(const BinExprNotEqual *expr_not_equal) const {
                 gen.gen_expr(expr_not_equal->rhs);
                 gen.gen_expr(expr_not_equal->lhs);
                 gen.pop("rax");
@@ -180,9 +181,9 @@ public:
                 gen.m_output << "    jne " << label << "\n";
                 gen.m_output << "    mov rax, 0\n";
                 gen.m_output << "    jmp " << newLabel << "\n\n";
-                gen.m_output << label <<":\n";
+                gen.m_output << label << ":\n";
                 gen.m_output << "    mov rax, 1\n";
-                gen.m_output << newLabel <<":\n";
+                gen.m_output << newLabel << ":\n";
                 gen.push("rax");
             }
         };
@@ -191,23 +192,23 @@ public:
         std::visit(visitor, bin_expr->var);
     }
 
-    void gen_scope(const NodeStmtScope* scope) {
+    void gen_scope(const NodeStmtScope *scope) {
         begin_scopes();
-        for (const NodeStmt* stmt : scope->stmts) {
+        for (const NodeStmt *stmt: scope->stmts) {
             gen_stmt(stmt);
         }
         end_scopes();
     }
 
-    void gen_expr(const NodeExpr* expr) {
+    void gen_expr(const NodeExpr *expr) {
         struct ExprVisitor {
+            Generator &gen;
 
-            Generator& gen;
-            void operator()(const NodeTerm* term) const {
+            void operator()(const NodeTerm *term) const {
                 gen.gen_term(term);
             }
 
-            void operator()(const NodeBinExpr* bin_expr) const {
+            void operator()(const NodeBinExpr *bin_expr) const {
                 gen.gen_bin_expr(bin_expr);
             }
         };
@@ -216,12 +217,12 @@ public:
         std::visit(visitor, expr->var);
     }
 
-    void gen_if_pred(const NodeStmtIfPred* pred, const std::string& end_label) {
+    void gen_if_pred(const NodeStmtIfPred *pred, const std::string &end_label) {
         struct PredVisitor {
-            Generator& gen;
-            const std::string& end_label;
+            Generator &gen;
+            const std::string &end_label;
 
-            void operator()(const NodeStmtIfPredElif* elif) const {
+            void operator()(const NodeStmtIfPredElif *elif) const {
                 gen.gen_expr(elif->expr);
                 gen.pop("rax");
                 const std::string label = gen.create_label();
@@ -235,7 +236,7 @@ public:
                 }
             }
 
-            void operator()(const NodeStmtIfPredElse* else_) const {
+            void operator()(const NodeStmtIfPredElse *else_) const {
                 gen.gen_scope(else_->scope);
             }
         };
@@ -244,34 +245,32 @@ public:
         std::visit(visitor, pred->var);
     }
 
-    void gen_stmt(const NodeStmt* stmt) {
+    void gen_stmt(const NodeStmt *stmt) {
         struct StmtVisitor {
-            Generator& gen;
+            Generator &gen;
 
-            void operator()(const NodeStmtExit* stmt_exit) const {
+            void operator()(const NodeStmtExit *stmt_exit) const {
                 gen.gen_expr(stmt_exit->expr);
                 gen.m_output << "    mov rax, 60\n";
                 gen.pop("rdi");
                 gen.m_output << "    syscall\n";
             }
 
-            void operator()(const NodeStmtMay* stmt_may) const {
+            void operator()(const NodeStmtMay *stmt_may) const {
                 const auto it = std::find_if(gen.m_vars.cbegin(), gen.m_vars.cend(),
-                    [&](const Vars& var) { return var.name == stmt_may->ident.value.value();
-                });
+                            [&](const Vars &var) { return var.name == stmt_may->ident.value.value(); });
 
                 if (it != gen.m_vars.cend()) {
-                    std::cerr <<"Identifier already used: " << stmt_may->ident.value.value() << "\n";
+                    std::cerr << "Identifier already used: " << stmt_may->ident.value.value() << "\n";
                     exit(EXIT_FAILURE);
                 }
                 gen.m_vars.push_back({.name = stmt_may->ident.value.value(), .stack_loc = gen.m_stack_size});
                 gen.gen_expr(stmt_may->expr);
             }
 
-            void operator()(const NodeStmtAssign* stmt_assign) const {
+            void operator()(const NodeStmtAssign *stmt_assign) const {
                 const auto it = std::find_if(gen.m_vars.cbegin(), gen.m_vars.cend(),
-                    [&](const Vars& var) { return var.name == stmt_assign->ident.value.value();
-                });
+                                [&](const Vars &var) {return var.name == stmt_assign->ident.value.value();});
 
                 if (it == gen.m_vars.cend()) {
                     std::cerr << "Undeclared Identifier" << stmt_assign->ident.value.value() << std::endl;
@@ -283,11 +282,11 @@ public:
                 gen.m_output << "    mov [rsp + " << (gen.m_stack_size - it->stack_loc - 1) * 8 << "], rax\n";
             }
 
-            void operator()(const NodeStmtScope* stmt_scope) const {
+            void operator()(const NodeStmtScope *stmt_scope) const {
                 gen.gen_scope(stmt_scope);
             }
 
-            void operator()(const NodeStmtIf* stmt_if) const {
+            void operator()(const NodeStmtIf *stmt_if) const {
                 gen.gen_expr(stmt_if->expr);
                 gen.pop("rax");
                 const std::string label = gen.create_label();
@@ -304,6 +303,39 @@ public:
                     gen.m_output << label << ":\n";
                 }
             }
+
+            void operator()(const NodeStmtWhile *stmt_while) const {
+                const std::string begin_label = gen.create_label();
+                const std::string tle_label = gen.create_label();
+                const std::string end_label = gen.create_label();
+                gen.m_output << "    mov rcx, 1000000000\n";
+
+                gen.m_output << begin_label << ":\n";
+                gen.gen_expr(stmt_while->expr);
+                gen.pop("rax");
+                gen.m_output << "    test rax, rax\n";
+                gen.m_output << "    jz " << end_label << "\n";
+                gen.m_output << "    dec rcx\n";
+                gen.m_output << "    cmp rcx, $0\n";
+                gen.m_output << "    jle " << tle_label << "\n";
+
+                gen.gen_scope(stmt_while->scope);
+                gen.m_output << "    test rax, rax\n";
+                gen.m_output << "    jnz " << begin_label << "\n";
+
+                gen.m_output << tle_label << ":\n";
+                gen.m_output << "    mov rax, 1\n";
+                gen.m_output << "    mov rdi, 1\n";
+                gen.m_output << "    mov rsi, msg\n";
+                gen.m_output << "    mov rdx, len\n";
+                gen.m_output << "    syscall\n";
+
+                gen.m_output << "    mov rax, 60\n";
+                gen.m_output << "    mov rdi, 0\n";
+                gen.m_output << "    syscall\n";
+
+                gen.m_output << end_label << ":\n";
+            }
         };
 
         StmtVisitor visitor{.gen = *this};
@@ -312,28 +344,28 @@ public:
 
     [[nodiscard]] std::string gen_prog() {
         std::stringstream output;
-        m_output << "global _start\n_start:\n";
+        m_output << "section .data\n";
+        m_output << "    msg db \"Oops! Time Limit Exceeded, check your logic\", 0xa\n";
+        m_output << "    len EQU $ - msg\n";
 
-        for (const NodeStmt& stmt : m_prog.stmts) {
+        m_output << "\nsection .text\n";
+        m_output << "    global _start\n_start:\n";
+
+        for (const NodeStmt &stmt: m_prog.stmts) {
             gen_stmt(&stmt);
         }
-
-        m_output << "    mov rax, 60\n";
-        m_output << "    mov rdi, 0\n";
-        m_output << "    syscall\n";
 
         return m_output.str();
     }
 
 private:
-
-    void push(const std::string& reg) {
+    void push(const std::string &reg) {
         m_output << "    push " << reg << "\n";
         m_stack_size++;
     }
 
-    void pop(const std::string& reg) {
-    m_output << "    pop " << reg << "\n";
+    void pop(const std::string &reg) {
+        m_output << "    pop " << reg << "\n";
         m_stack_size--;
     }
 
@@ -365,7 +397,7 @@ private:
     const NodeProg m_prog;
     std::stringstream m_output;
     size_t m_stack_size = 0;
-    std::vector<Vars> m_vars {};
-    std::vector<size_t> m_scopes {};
+    std::vector<Vars> m_vars{};
+    std::vector<size_t> m_scopes{};
     int m_label_count = 0;
 };
