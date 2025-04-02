@@ -1,6 +1,8 @@
 #Ignore build directories
 cmake-build-debug-wsl/
 cmake-build-relwithdebinfo-wsl/
+.vscode/
+build/
 
 #ignore IDE specific files
 .idea/

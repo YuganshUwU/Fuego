@@ -340,6 +340,7 @@ public:
             }
 
             void operator()(const NodeStmtFor* for_stmt) const {
+                gen.begin_scopes();
                 const std::string start_label = gen.create_label();  
                 const std::string end_label = gen.create_label();    
                 const std::string increment_label = gen.create_label();
@@ -360,6 +361,7 @@ public:
                 gen.m_output << "    jmp " << start_label << "\n";  
             
                 gen.m_output << end_label << ":\n";
+                gen.end_scopes();
             }            
         };
 
