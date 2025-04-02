@@ -1,1 +1,0 @@
-/mnt/c/MinGW/bin/g++.exe -g CMakeFiles/fue.dir/src/main.cpp.o -o fue 

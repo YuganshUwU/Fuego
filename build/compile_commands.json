@@ -1,7 +1,0 @@
-[
-{
-  "directory": "/home/yu/dev/fuego/build",
-  "command": "/mnt/c/MinGW/bin/g++.exe   -g -std=gnu++1z -o CMakeFiles/fue.dir/src/main.cpp.o -c /home/yu/dev/fuego/src/main.cpp",
-  "file": "/home/yu/dev/fuego/src/main.cpp"
-}
-]
