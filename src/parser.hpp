@@ -134,8 +134,15 @@ struct NodeStmtWhile {
     NodeStmtScope *scope{};
 };
 
+struct NodeStmtFor {
+    NodeStmt *init{};
+    NodeExpr *cond{};
+    NodeStmt *iter{};
+    NodeStmtScope *scope{};
+};
+
 struct NodeStmt {
-    std::variant<NodeStmtExit *, NodeStmtMay *, NodeStmtScope *, NodeStmtIf *, NodeStmtAssign *, NodeStmtWhile *> var;
+    std::variant<NodeStmtExit *, NodeStmtMay *, NodeStmtScope *, NodeStmtIf *, NodeStmtAssign *, NodeStmtWhile *, NodeStmtFor *> var;
 };
 
 struct NodeProg {
@@ -148,7 +155,7 @@ public:
     }
 
     void get_error(const std::string &msg) const {
-        std::cerr << "[Parse Error] Expected " << msg << " on line " << peek(-1)->line << "\n";
+        std::cerr << "[Parsing Error] Expected " << msg << " on line " << peek(-1)->line << "\n";
         exit(EXIT_FAILURE);
     }
 
@@ -338,6 +345,22 @@ public:
         return {};
     }
 
+    std::optional<NodeStmtAssign *> parse_assign() {
+        const auto assign = m_allocator.alloc<NodeStmtAssign>();
+        if (peek().has_value() && peek().value().type == TokenType::ident &&
+            peek(1).has_value() && peek(1).value().type == TokenType::equal) {
+            assign->ident = engulf();
+            engulf();
+
+            if (const auto expr = parse_expr()) {
+                assign->expr = expr.value();
+            } else {
+                get_error("expression");
+            }
+        }
+        return assign;
+    }
+
     std::optional<NodeStmt *> parse_stmt() {
         if (peek().has_value() && peek().value().type == TokenType::exit &&
             peek(1).has_value() && peek(1).value().type == TokenType::open_paren) {
@@ -448,6 +471,43 @@ public:
             return stmt;
         }
 
+        if (try_engulf(TokenType::f_loop)) {
+            try_engulf(TokenType::open_paren, "`(`");
+            auto stmt_for = m_allocator.alloc<NodeStmtFor>();
+
+            if(const auto init = parse_stmt()) {
+                stmt_for->init = init.value();
+            } else {
+                get_error("an initialization expression");
+            }
+
+            if(const auto cond = parse_expr()) {
+                stmt_for->cond = cond.value();
+            } else {
+                get_error("the conditional expression");
+            }
+
+            try_engulf(TokenType::semi, "';");
+
+            if(const auto iter = parse_stmt()) {
+                stmt_for->iter = iter.value();
+            } else {
+                get_error("the movement expression");
+            }
+
+            try_engulf(TokenType::close_paren, "`)`");
+
+            if(const auto scope = parse_scope()) {
+                stmt_for->scope = scope.value();
+            } else {
+                get_error("a body for for loop");
+            }
+
+            auto stmt = m_allocator.alloc<NodeStmt>();
+            stmt->var = stmt_for;
+            return stmt;
+        }
+
         return {};
     }
 
@@ -457,7 +517,7 @@ public:
             if (auto stmt = parse_stmt()) {
                 prog.stmts.push_back(*stmt.value());
             } else {
-                get_error("Statement");
+                get_error("this Statement");
             }
         }
 

@@ -8,7 +8,8 @@ $$
             \text{ident} = [\text{Expr}];\\
             \text{[Scope]}\\
             \text{if ([Expr]) [Scope]} [\text{IfPred}]\\
-            [\text{While}]\\
+            \text{[While]}\\
+            \text{[For]}\\
         \end{cases}\\
     [\text{Expr}] &\to 
         \begin{cases}
@@ -23,6 +24,7 @@ $$
             \epsilon\\
         \end{cases}\\
     [\text{While}] &\to \text{while } [\text{Expr}][\text{Scope}]\\
+    [\text{For}] &\to \text{for [Expr1] [Expr2] [Expr3] [Scope]}\\
     [\text{BinExpr}] &\to 
         \begin{cases}
             [\text{Expr}] / [\text{Expr}] & \text{prec = 2}\\

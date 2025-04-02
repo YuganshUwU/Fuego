@@ -4,7 +4,7 @@ enum class TokenType {
     exit, int_lit, semi, open_paren, close_paren, ident, may,
     equal, plus, star, minus, fslash, curly_open, curly_close,
     if_, elif, else_, big, small, iseq, big_eq, small_eq, no_eq,
-    w_loop
+    w_loop, f_loop
 };
 
 inline std::optional<int> bin_prec(const TokenType type) {
@@ -71,6 +71,9 @@ public:
                     buf.clear();
                 } else if (buf == "while") {
                     tokens.push_back({TokenType::w_loop, line_count});
+                    buf.clear();
+                } else if (buf == "for") {
+                    tokens.push_back({TokenType::f_loop, line_count});
                     buf.clear();
                 } else {
                     tokens.push_back({TokenType::ident, line_count, buf});

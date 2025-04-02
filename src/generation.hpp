@@ -1,6 +1,8 @@
 #pragma once
 
 #include "parser.hpp"
+#include <algorithm>
+#include <assert.h>
 
 class Generator {
 public:
@@ -336,6 +338,29 @@ public:
 
                 gen.m_output << end_label << ":\n";
             }
+
+            void operator()(const NodeStmtFor* for_stmt) const {
+                const std::string start_label = gen.create_label();  
+                const std::string end_label = gen.create_label();    
+                const std::string increment_label = gen.create_label();
+            
+                gen.gen_stmt(for_stmt->init);
+                gen.m_output << "    jmp " << start_label << "\n";  
+                
+                gen.m_output << start_label << ":\n";
+                gen.gen_expr(for_stmt->cond);
+                gen.pop("rax");  
+                gen.m_output << "    test rax, rax\n";  
+                gen.m_output << "    jz " << end_label << "\n";  
+            
+                gen.gen_scope(for_stmt->scope);
+                    
+                gen.m_output << increment_label << ":\n";
+                gen.gen_stmt(for_stmt->iter);  
+                gen.m_output << "    jmp " << start_label << "\n";  
+            
+                gen.m_output << end_label << ":\n";
+            }            
         };
 
         StmtVisitor visitor{.gen = *this};

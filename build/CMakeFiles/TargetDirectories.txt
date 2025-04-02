@@ -1,0 +1,3 @@
+/home/yu/dev/fuego/build/CMakeFiles/fue.dir
+/home/yu/dev/fuego/build/CMakeFiles/edit_cache.dir
+/home/yu/dev/fuego/build/CMakeFiles/rebuild_cache.dir
