@@ -462,7 +462,9 @@ public:
                 get_error("Expression");
             }
 
+            try_engulf(TokenType::semi, "';'");
             try_engulf(TokenType::close_paren, "')'");
+            
             if (const auto scope = parse_scope()) {
                 stmt_while->scope = scope.value();
             }

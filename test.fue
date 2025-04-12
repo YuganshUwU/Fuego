@@ -1,9 +1,9 @@
 may x = 90;
 may y = 10;
-for (may z = 1; z < 0; z = z + 1;) {
+for (may z = 0; z < 10000000000000; z = z - 1;) {
     --entering the for loop
     x = x - 1;
     y = y + 1;
 }
 
-exit(z);
+exit(y);

@@ -341,28 +341,47 @@ public:
 
             void operator()(const NodeStmtFor* for_stmt) const {
                 gen.begin_scopes();
-                const std::string start_label = gen.create_label();  
-                const std::string end_label = gen.create_label();    
-                const std::string increment_label = gen.create_label();
+    
+                const std::string start_label = gen.create_label();
+                const std::string end_label = gen.create_label();        
+                const std::string increment_label = gen.create_label();  
+                const std::string tle_label = gen.create_label();        
+            
+                gen.m_output << "    mov rcx, 1000000000\n";  
             
                 gen.gen_stmt(for_stmt->init);
-                gen.m_output << "    jmp " << start_label << "\n";  
-                
+                gen.m_output << "    jmp " << start_label << "\n";
+            
                 gen.m_output << start_label << ":\n";
                 gen.gen_expr(for_stmt->cond);
-                gen.pop("rax");  
-                gen.m_output << "    test rax, rax\n";  
-                gen.m_output << "    jz " << end_label << "\n";  
+                gen.pop("rax");
+                gen.m_output << "    test rax, rax\n";
+                gen.m_output << "    jz " << end_label << "\n";
+            
+                gen.m_output << "    dec rcx\n";
+                gen.m_output << "    cmp rcx, $0\n";
+                gen.m_output << "    jle " << tle_label << "\n";
             
                 gen.gen_scope(for_stmt->scope);
-                    
+            
                 gen.m_output << increment_label << ":\n";
-                gen.gen_stmt(for_stmt->iter);  
-                gen.m_output << "    jmp " << start_label << "\n";  
+                gen.gen_stmt(for_stmt->iter);
+                gen.m_output << "    jmp " << start_label << "\n";
+            
+                gen.m_output << tle_label << ":\n";
+                gen.m_output << "    mov rax, 1\n";
+                gen.m_output << "    mov rdi, 1\n";
+                gen.m_output << "    mov rsi, msg\n";
+                gen.m_output << "    mov rdx, len\n";
+                gen.m_output << "    syscall\n";
+            
+                gen.m_output << "    mov rax, 60\n";
+                gen.m_output << "    mov rdi, 0\n";
+                gen.m_output << "    syscall\n";
             
                 gen.m_output << end_label << ":\n";
                 gen.end_scopes();
-            }            
+            }                    
         };
 
         StmtVisitor visitor{.gen = *this};

@@ -39,6 +39,7 @@ struct Token {
 class Tokenizer {
 public:
     explicit Tokenizer(std::string src) : m_src(std::move(src)) {
+        
     }
 
     std::vector<Token> tokenize() {

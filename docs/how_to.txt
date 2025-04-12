@@ -1,0 +1,144 @@
+===============================
+    Fuego - Guide
+===============================
+
+Welcome! This file will guide you through the basics of using this language.
+More features will be added in the future. For now, here’s what’s supported:
+
+-------------------------------
+1. Variable Declaration
+-------------------------------
+
+To declare a variable:
+
+    may x = 10;
+
+NOTE:
+- All variables are 8-bit. This means they wrap around after 255 back to 0.
+  For example: if x = 255, then x + 1 results in 0.
+
+-------------------------------
+2. Variable Reassignment
+-------------------------------
+
+You can reassign a new value to an already declared variable:
+
+    may x = 10;
+    x = 20;
+
+This will overwrite the value of `x` with 20.
+
+-------------------------------
+3. If Statements
+-------------------------------
+
+Basic conditional check:
+
+    if (x > 10) {
+        print("X is greater than 10");
+    } elif (x > 5) {
+        print("X is greater than 5");
+    } else {
+        print("X is 5 or less");
+    }
+
+NOTE:
+- You can skip the `elif` and `else` parts.
+- But to use `elif` or `else`, you must start with an `if` statement.
+
+-------------------------------
+4. For Loops
+-------------------------------
+
+Use a `for` loop to repeat a block of code a specific number of times:
+
+    may x = 10;
+    for (may i = 0; i < 10; i = i + 1;) {
+        x = x + i;
+    }
+
+    exit(x);
+
+NOTE:
+- The loop has a built-in timeout mechanism. If it runs too long, it will stop.
+
+-------------------------------
+5. While Loops
+-------------------------------
+
+Use a `while` loop when you don’t know in advance how many times you'll loop:
+
+    may x = 10;
+    may y = 10;
+
+    while (x > 0;) {
+        y = y + x;
+        x = x - 1;
+    }
+
+    exit(y);
+
+NOTE:
+- Like `for`, `while` also has a timeout check to avoid infinite loops.
+
+-------------------------------
+6. Exit Statement
+-------------------------------
+
+The `exit()` statement is used to stop the program immediately.
+
+It sends a number back to the system called an "exit code".
+This can tell whether the program finished successfully or had an error.
+
+Examples:
+
+    exit(10);       -- Exit with code 10
+
+    may x = 10;
+    exit(x);        -- Exit with the value of x
+
+Once `exit()` is called, the program stops running. Nothing after it runs.
+
+-------------------------------
+7. Comments
+-------------------------------
+
+Add comments to explain your code.
+
+Single-line comment:
+
+    -- This is a comment
+
+Multi-line comment:
+
+    /* This comment will last
+       any number of lines
+       depending on user */
+
+-------------------------------
+8. Comparison Operators
+-------------------------------
+
+You can use the following comparison operators inside `if` or `while`:
+
+    ==   (equal to)
+    !=   (not equal to)
+    >    (greater than)
+    <    (less than)
+    >=   (greater than or equal to)
+    <=   (less than or equal to)
+
+Examples:
+
+    if (x == 10) { ... }
+    if (y != 5)  { ... }
+    if (a >= b)  { ... }
+
+-------------------------------
+9. Coming Soon
+-------------------------------
+
+- Functions
+- Classes
+
+Stay tuned :)
